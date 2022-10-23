@@ -4,7 +4,7 @@ import datetime
 import urllib3
 from urllib.parse import urlencode
 import json
-
+import random
 app = Flask(__name__)
 
 http = urllib3.PoolManager()
@@ -16,8 +16,12 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
-@app.route("/")
-def index():
-    x = http.request('GET','localhost:5001/index')
-    db_students = json.loads(x.data.decode('utf-8'))
-    return render_template("index.html", db_students=db_students)
+@app.route("/quote", methods=["GET", "POST"])
+def quote():
+    if request.method == "GET":
+        return render_template("quote.html")
+    symbol = request.form.get("symbol")
+    result = lookup(symbol)
+    if not result:
+        return apology("Invalid Symbol", 400)
+    return render_template("quoted.html", name = result["name"], price = usd(result["price"]), symbol = result["symbol"])
